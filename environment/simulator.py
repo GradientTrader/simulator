@@ -23,11 +23,9 @@ class Simulator:
 
     def step(self, action):
         if action == self.Action.BUY:
-            self.portfolio.executeOrder(coins_to_buy=self.Num_Coins_Per_Order)
+            self.portfolio.executeOrder(coins_to_buy_sell=self.Num_Coins_Per_Order)
         elif action == self.Action.SELL:
-            self.portfolio.executeOrder(coins_to_buy=self.Num_Coins_Per_Order * -1)
-        else:
-            self.portfolio.executeOrder(coins_to_buy=0)
+            self.portfolio.executeOrder(coins_to_buy_sell=self.Num_Coins_Per_Order * -1)
 
         if self.portfolio.step() is False:
             return [None, 0]

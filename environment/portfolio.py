@@ -27,11 +27,11 @@ class Portfolio:
         return "%.2f coins, %.2f cash, %.2f current value, %.2f percent returns" \
                 % (self.portfolio_coin, self.portfolio_cash, self.getCurrentValue(), self.getReturnsPercent())
 
-    def executeOrder(self, coins_to_buy=0):
+    def executeOrder(self, coins_to_buy_sell=0):
         future_value = self.coin.getFutureValue()
         if not future_value:
             return 0
-        amount_to_buy = min(self.portfolio_cash / future_value, coins_to_buy)
+        amount_to_buy = min(self.portfolio_cash / future_value, coins_to_buy_sell)
         self.portfolio_coin += amount_to_buy
         self.portfolio_cash -= amount_to_buy * future_value
         return amount_to_buy
