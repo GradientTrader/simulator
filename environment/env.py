@@ -19,8 +19,8 @@ class Coin:
         self.current_index = 0
 
         #compute rolling mean and bollinger bands
-        self.rm = pd.rolling_mean(self.series["Close"], window=20)
-        self.rstd = pd.rolling_std(self.series["Close"], window=20)
+        self.rm = pd.rolling_mean(self.series["Open"], window=20)
+        self.rstd = pd.rolling_std(self.series["Open"], window=20)
         self.upper_band, self.lower_band = self.rm + 2 * self.rstd, self.rm - 2 * self.rstd
 
     def getNext(self):
@@ -32,13 +32,13 @@ class Coin:
 
     def getCurrentValue(self):
         if self.current_index >= self.length:
-            return self.series.loc[self.length - 1]["Close"]
-        return self.series.loc[self.current_index]["Close"]
+            return self.series.loc[self.length - 1]["Open"]
+        return self.series.loc[self.current_index]["Open"]
 
     def getFutureValue(self):
         if self.current_index + 1 >= self.length:
             return None
-        return self.series.loc[self.current_index + 1]["Close"]
+        return self.series.loc[self.current_index + 1]["Open"]
 
     def checkBollingerBands(self):
         IsGreaterThanUpper = 0
