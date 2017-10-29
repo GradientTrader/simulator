@@ -18,6 +18,11 @@ class Coin:
         self.length = len(self.series.index)
         self.current_index = 0
 
+        #compute rolling mean and bollinger bands
+        self.rm = pd.rolling_mean(self.series["Close"], window=20)
+        self.rstd = pd.rolling_std(self.series["Close"], window=20)
+        self.upper_band, self.lower_band = self.rm + 2 * self.rstd, self.rm - 2 * self.rstd
+
     def getNext(self):
         if self.current_index == self.length:
             return None
@@ -36,16 +41,14 @@ class Coin:
         return self.series.loc[self.current_index + 1]["Close"]
 
     def checkBollingerBands(self):
-        rm = pd.rolling_mean(self.series["Close"], window=20)
-        rstd = pd.rolling_std(self.series["Close"], window=20)
-        upper_band, lower_band = rm + 2 * rstd, rm - 2 * rstd
-
         IsGreaterThanUpper = 0
-        if np.isnan(upper_band[self.current_index]) is False and upper_band[self.current_index] < self.getCurrentValue():
+        if np.isnan(self.upper_band[self.current_index]) is False \
+                and self.upper_band[self.current_index] < self.getCurrentValue():
             IsGreaterThanUpper = 1
 
         IsSmallerThanLower = 0
-        if np.isnan(lower_band[self.current_index]) is False and lower_band[self.current_index] > self.getCurrentValue():
+        if np.isnan(self.lower_band[self.current_index]) is False \
+                and self.lower_band[self.current_index] > self.getCurrentValue():
             IsSmallerThanLower = 1
 
         return [IsGreaterThanUpper, IsSmallerThanLower]
