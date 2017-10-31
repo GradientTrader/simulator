@@ -53,13 +53,32 @@ class Coin:
         return self.series.loc[self.current_index + 1]["Open"]
 
     def checkBollingerBands(self):
-        IsGreaterThanUpper = 0
-        if self.upper_band.loc[self.current_index] < self.getCurrentValue():
-            IsGreaterThanUpper = 1
+        isCrossUpperBand = 0
+        if self.checkCrossUpperBand():
+            isCrossUpperBand = 1
 
-        IsSmallerThanLower = 0
-        if self.lower_band.loc[self.current_index] > self.getCurrentValue():
-            IsSmallerThanLower = 1
+        isCrossLowerBand = 0
+        if self.checkCrossLowerBand():
+            isCrossLowerBand = 1
 
-        return [IsGreaterThanUpper, IsSmallerThanLower]
+        return [isCrossUpperBand, isCrossLowerBand]
+    
+    
+    def checkCrossUpperBand(self):
+        return (
+            self.current_index - 1 >= 0
+            and self.upper_band.loc[self.current_index - 1] <= self.getCurrentValue()
+            and self.upper_band.loc[self.current_index] > self.getCurrentValue()
+        )
+    
+    def checkCrossLowerBand(self):
+        return (
+            self.current_index - 1 >= 0
+            and self.lower_band.loc[self.current_index - 1] >= self.getCurrentValue()
+            and self.lower_band.loc[self.current_index] < self.getCurrentValue()
+        )
+    
+    
+    
+    
 
