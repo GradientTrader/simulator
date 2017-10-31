@@ -14,47 +14,52 @@ class Coin:
             raise Exception("Bad coin name!")
         self.coin_name = coin_name
         self.series = pd.read_csv("%s/cryptocurrencypricehistory/%s_price.csv" % (os.path.dirname(os.path.abspath(__file__)), self.coin_name), parse_dates=["Date"])
-        self.series.index = self.series.sort_values(by=["Date"]).index ## reorder so that date increases
+        ## reorder so that date increases
+        self.series.index = self.series.sort_values(by=["Date"]).index
+        self.series = self.series.sort_index()
+        
         self.length = len(self.series.index)
         self.current_index = 0
 
         #compute rolling mean and bollinger bands
-        self.rm = pd.rolling_mean(self.series["Open"], window=20)
-        self.rstd = pd.rolling_std(self.series["Open"], window=20)
+        self.rm = self.series["Open"].rolling(window=20,center=False).mean()
+        self.rstd = self.series["Open"].rolling(window=20,center=False).std()
         self.upper_band, self.lower_band = self.rm + 2 * self.rstd, self.rm - 2 * self.rstd
 
-    def getNext(self):
-        if self.current_index == self.length:
+    
+    def advance(self):
+        if self.current_index+1 < self.length:
+            self.current_index += 1
+            data = self.series.loc[self.current_index]
+            return data
+        else:
             return None
-        data = self.series.loc[self.current_index]
-        self.current_index += 1
-        return data
+        
+    def advance_n_step(self, step):
+        if self.current_index+step < self.length:
+            self.current_index += step
+            data = self.series.loc[self.current_index]
+            return data
+        else:
+            return None 
 
     def getCurrentValue(self):
-        if self.current_index >= self.length:
-            return self.series.loc[self.length - 1]["Open"]
         return self.series.loc[self.current_index]["Open"]
+    
 
-    def getFutureValue(self):
+    def getNextValue(self):
         if self.current_index + 1 >= self.length:
             return None
         return self.series.loc[self.current_index + 1]["Open"]
 
     def checkBollingerBands(self):
         IsGreaterThanUpper = 0
-        if np.isnan(self.upper_band[self.current_index]) is False \
-                and self.upper_band[self.current_index] < self.getCurrentValue():
+        if self.upper_band.loc[self.current_index] < self.getCurrentValue():
             IsGreaterThanUpper = 1
 
         IsSmallerThanLower = 0
-        if np.isnan(self.lower_band[self.current_index]) is False \
-                and self.lower_band[self.current_index] > self.getCurrentValue():
+        if self.lower_band.loc[self.current_index] > self.getCurrentValue():
             IsSmallerThanLower = 1
 
         return [IsGreaterThanUpper, IsSmallerThanLower]
 
-
-# a = Coin("ethereum")
-# print a.series.loc[0]
-# # print a.getCurrentValue()
-# print a.series.index

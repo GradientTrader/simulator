@@ -27,22 +27,35 @@ class Portfolio:
         return "%.2f coins, %.2f cash, %.2f current value, %.2f percent returns" \
                 % (self.portfolio_coin, self.portfolio_cash, self.getCurrentValue(), self.getReturnsPercent())
 
-    def executeOrder(self, coins_to_buy_sell=0):
-        future_value = self.coin.getFutureValue()
-        if not future_value:
+    def buy(self, coins_to_buy=0):
+        current_price = self.coin.getCurrentValue()
+        if not current_price:
             return 0
-        amount_to_buy = min(self.portfolio_cash / future_value, coins_to_buy_sell)
+        amount_to_buy = min(self.portfolio_cash / current_price, coins_to_buy)
         self.portfolio_coin += amount_to_buy
-        self.portfolio_cash -= amount_to_buy * future_value
+        self.portfolio_cash -= amount_to_buy * current_price
         return amount_to_buy
+    
+    def sell(self, coins_to_sell=0):
+        current_price = self.coin.getCurrentValue()
+        if not current_price:
+            return 0
+        coin_to_sell = min(coins_to_sell, self.portfolio_coin)
+        self.portfolio_coin -= coin_to_sell
+        self.portfolio_cash += coin_to_sell * current_price
+        return coin_to_sell
+        
+        coin_to_buy = min(self.portfolio_cash / current_price, coins_to_buy)
+        self.portfolio_coin += coin_to_buy
+        self.portfolio_cash -= coin_to_buy * current_price
+        return coin_to_buy
 
     def step(self):
         # get current port value
         current_value = self.getCurrentValue()
-
+        
         # step to next day
-        data = self.coin.getNext()
-        if data is None:
+        if self.coin.advance() is None:
             return False
 
         # get new port value
@@ -64,7 +77,10 @@ class Portfolio:
         sd_daily_return = self.daily_returns.std()
 
         # assume risk-free return to be 0%
-        sharpe_ratio = np.sqrt(252) * (avg_daily_return / sd_daily_return)
+        if sd_daily_return == 0:
+            sharpe_ratio = 0
+        else:
+            sharpe_ratio = np.sqrt(252) * (avg_daily_return / sd_daily_return)
 
         # check if the price is outside the Bollinger Bands
         check_upper_band, check_lower_band = self.coin.checkBollingerBands()
