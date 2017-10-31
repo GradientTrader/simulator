@@ -44,11 +44,6 @@ class Portfolio:
         self.portfolio_coin -= coin_to_sell
         self.portfolio_cash += coin_to_sell * current_price
         return coin_to_sell
-        
-        coin_to_buy = min(self.portfolio_cash / current_price, coins_to_buy)
-        self.portfolio_coin += coin_to_buy
-        self.portfolio_cash -= coin_to_buy * current_price
-        return coin_to_buy
 
     def step(self):
         # get current port value
