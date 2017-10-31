@@ -31,7 +31,7 @@ class Simulator:
         return randint(self.Action.BUY, self.Action.HOLD, self.Action.SELL)
 
     
-    def take_action_and_step(self, action):
+    def act_and_step(self, action):
         #print 'Taking action:', action
         if action == self.Action.BUY:
             self.portfolio.buy(self.num_coins_per_order)
