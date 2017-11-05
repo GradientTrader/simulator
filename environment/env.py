@@ -79,6 +79,10 @@ class Coin:
         )
     
     
+    def reset(self):
+        self.current_index = 0
+    
+    
     
     
 

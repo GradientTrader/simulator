@@ -81,3 +81,12 @@ class Portfolio:
         check_upper_band, check_lower_band = self.coin.checkBollingerBands()
 
         return [avg_daily_return, sd_daily_return, sharpe_ratio, check_upper_band, check_lower_band]
+    
+    
+    def reset(self):
+        self.coin.reset()
+        self.portfolio_coin = 0
+        self.portfolio_cash = self.starting_cash
+        self.latest_coin_value = self.coin.getCurrentValue()
+        self.daily_returns = np.array([0.0])
+        
