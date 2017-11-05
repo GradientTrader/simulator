@@ -38,13 +38,13 @@ class Simulator:
         elif action == Action.SELL:
             self.portfolio.sell(self.num_coins_per_order)
 
-        if self.portfolio.step() is False:
-            return [None, 0]
-
         state = self.portfolio.getCurrentState()
         reward = self.portfolio.getReturnsPercent()
 
-        return [state, reward]
+        if self.portfolio.step() is False:
+            return [state, reward, True]
+        
+        return [state, reward, False]
     
     
     def reset(self):
