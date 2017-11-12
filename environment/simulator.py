@@ -56,3 +56,7 @@ class Simulator:
 
     def get_action_size(self):
         return len(Action)
+    
+    
+    def plot_coin_price(self):
+        self.coin.plot()

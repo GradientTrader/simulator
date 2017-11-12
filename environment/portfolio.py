@@ -80,7 +80,7 @@ class Portfolio:
         # check if the price is outside the Bollinger Bands
         check_upper_band, check_lower_band = self.coin.checkBollingerBands()
 
-        return [self.getCurrentValue(), avg_daily_return, sd_daily_return, sharpe_ratio, check_upper_band, check_lower_band]
+        return [self.getCurrentValue(), self.coin.getCurrentValue(), sharpe_ratio, check_upper_band, check_lower_band]
     
     
     def reset(self):
