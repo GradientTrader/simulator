@@ -11,8 +11,8 @@ available_coins = ["bitcoin_cash", "bitcoin", "bitconnect", "dash_price", "ether
 
 class Coin:
     def __init__(self, coin_name="ethereum", recent_k = 0):
-        if coin_name not in available_coins:
-            raise Exception("Bad coin name!")
+        # if coin_name not in available_coins:
+        #     raise Exception("Bad coin name!")
         self.coin_name = coin_name
         self.series = pd.read_csv("%s/cryptocurrencypricehistory/%s_price.csv" % (os.path.dirname(os.path.abspath(__file__)), self.coin_name), parse_dates=["Date"])
         ## reorder so that date increases
