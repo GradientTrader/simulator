@@ -13,14 +13,17 @@ class Action(Enum):
 
 
 class Simulator:
-    def __init__(self, num_coins_per_order=1, portfolio_cash=1000.0, coin=Coin("ethereum")):
+    def __init__(self, num_coins_per_order=1, 
+        portfolio_cash=1000.0, 
+        coin=Coin("ethereum"),
+        features=["rolling_mean", "rolling_std", "sharpe_ratio", "bollinger_upper", "bollinger_lower"]):
         self.num_coins_per_order = num_coins_per_order
         self.coin = coin
         self.portfolio = Portfolio(portfolio_cash=portfolio_cash, coin=coin)
-        
+        self.features = features
     
     def get_current_state(self):
-        return self.portfolio.getCurrentState()
+        return self.portfolio.getCurrentState(self.features)
     
     
     def get_current_holdings(self):
@@ -38,7 +41,7 @@ class Simulator:
         elif action == Action.SELL:
             self.portfolio.sell(self.num_coins_per_order)
 
-        state = self.portfolio.getCurrentState()
+        state = self.get_current_state()
         reward = self.portfolio.getReturnsPercent()
 
         if self.portfolio.step() is False:
@@ -52,7 +55,7 @@ class Simulator:
         
     
     def get_state_size(self):
-        return len(self.portfolio.getCurrentState())
+        return len(self.get_current_state())
 
     def get_action_size(self):
         return len(Action)

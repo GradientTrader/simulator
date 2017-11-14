@@ -64,24 +64,25 @@ class Portfolio:
 
         return True
 
-    def getCurrentState(self):
+    def getCurrentState(self, features=["rolling_mean", "rolling_std", "sharpe_ratio", "bollinger_upper", "bollinger_lower"]):
         # state is represented by a feature vector
         # [avg_daily_return, sd_daily_return, sharpe_ratio, check_upper_band, check_lower_band]
 
-        avg_daily_return = self.daily_returns.mean()
-        sd_daily_return = self.daily_returns.std()
+        feature_dict = {}
+        feature_dict["rolling_mean"] = self.daily_returns.mean()
+        feature_dict["rolling_std"] = self.daily_returns.std()
 
-        # assume risk-free return to be 0%
-        if sd_daily_return == 0:
+        if feature_dict["rolling_std"] == 0:
             sharpe_ratio = 0
         else:
-            sharpe_ratio = np.sqrt(252) * (avg_daily_return / sd_daily_return)
+            sharpe_ratio = np.sqrt(252) * (feature_dict["rolling_mean"] / feature_dict["rolling_std"])
+        feature_dict["sharpe_ratio"] = sharpe_ratio
 
         # check if the price is outside the Bollinger Bands
         check_upper_band, check_lower_band = self.coin.checkBollingerBands()
-
-        return [self.getCurrentValue(), self.coin.getCurrentValue(), sharpe_ratio, check_upper_band, check_lower_band]
-    
+        feature_dict["bollinger_upper"] = check_upper_band
+        feature_dict["bollinger_lower"] = check_lower_band
+        return [feature_dict[feature] for feature in features]    
     
     def reset(self):
         self.coin.reset()

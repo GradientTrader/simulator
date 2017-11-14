@@ -75,9 +75,11 @@ from collections import deque
 
 class Crypto_Trader:
 
-    def __init__(self, gamma = 0.95, epsilon = 1.0, epsilon_min = 0.01, epsilon_decay = 0.99, num_episodes = 1000,
-                num_neutron = 24, num_coins_per_order = 100, init_capital = 1000, 
-                coin_name = 'ethereum', recent_k = 0):
+    def __init__(self, gamma = 0.95, epsilon = 1.0, epsilon_min = 0.01, 
+        epsilon_decay = 0.99, num_episodes = 1000,
+        num_neutron = 24, num_coins_per_order = 100, init_capital = 1000, 
+        coin_name = 'ethereum', recent_k = 0,
+        features=["rolling_mean", "rolling_std", "sharpe_ratio", "bollinger_upper", "bollinger_lower"]):
 
         self.memory = deque(maxlen=2000)
         self.batch_size = 300
@@ -96,9 +98,11 @@ class Crypto_Trader:
         # number of episodes for training
         self.num_episodes = num_episodes
         
+        self.features = features
+
         # init simulator
         self.coin_name = coin_name
-        self.simulator = Simulator(num_coins_per_order, init_capital, Coin(coin_name, recent_k))
+        self.simulator = Simulator(num_coins_per_order, init_capital, Coin(coin_name, recent_k), features=self.features)
         
         # init NN model
         self.model = QValue_NN(self.simulator.get_state_size(), self.simulator.get_action_size(), num_neutron)
@@ -151,7 +155,7 @@ class Crypto_Trader:
             
             self.simulator.reset()
             state = self.simulator.get_current_state()
-            
+
             while (True):
                 
                 action = self.act(state, self.epsilon)
