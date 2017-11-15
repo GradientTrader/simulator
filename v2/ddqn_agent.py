@@ -117,18 +117,16 @@ class DDQNAgent:
 
         while (True):
             action = self.act(state)
+            print action
             self.portfolio.apply_action(action)
             isDone, next_state = self.env.step()
             reward = self.portfolio.getReturnsPercent()
             state = next_state
-               
             if isDone:
-                self.update_target_model()
-                print("episode: {}/{}, reward: {}, epsilon: {:.2}"
-                          .format(i+1, num_episodes, reward, self.epsilon))
-                break
-        
+            	break
+
+        print self.portfolio.getReturnsPercent()      
 
 # trader = DDQNAgent()
-# trader.train(800)
+# trader.train(50)
 # trader.test()
