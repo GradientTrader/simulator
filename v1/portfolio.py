@@ -14,8 +14,9 @@ class Portfolio:
         self.portfolio_cash = portfolio_cash
         self.latest_coin_value = self.coin.getCurrentValue()
 
-        # store daily returns
+        # storage of historical data
         self.daily_returns = np.array([0.0])
+        self.daily_price = np.array([0.0])
 
     def getCurrentValue(self):
         return self.portfolio_coin * self.coin.getCurrentValue() + self.portfolio_cash
@@ -46,21 +47,17 @@ class Portfolio:
         return coin_to_sell
 
     def step(self):
-        # get current port value
         current_value = self.getCurrentValue()
         
-        # step to next day
         if self.coin.advance() is None:
             return False
 
-        # get new port value
         new_value = self.getCurrentValue()
 
-        # compute daily return
+        ## computing new features
         daily_return = (new_value - current_value) / current_value
-
-        # add to daily return list
         self.daily_returns = np.append(self.daily_returns, [daily_return])
+        
 
         return True
 
