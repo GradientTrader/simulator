@@ -21,11 +21,9 @@ print bba.act([1, 0])
 print bba.act([0, 1])
 '''
 class BollingerBandAgent:
-    def __init__(self, Action):
-        self.Action = Action
 
     def act(self, state):
-    	higher_than_upper_band, lower_than_lower_band = state 
+    	current_price, higher_than_upper_band, lower_than_lower_band = state 
     	if higher_than_upper_band:
     		return Action.SELL
     	if lower_than_lower_band:

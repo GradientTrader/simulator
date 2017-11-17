@@ -9,6 +9,8 @@ from keras.optimizers import Adam
 from keras import backend as K
 from keras.models import load_model
 
+
+
 class QValue_NN:
     def __init__(self, state_size, action_size, units):
         self._state_size = state_size
@@ -37,6 +39,18 @@ class QValue_NN:
         state_reshape = np.reshape(state, [1, len(state)])
         return self._model.predict(state_reshape)
     
+    def set_weights(self, model_weights):
+        self._model.set_weights(model_weights)
+        
+    def get_weights(self):
+        return self._model.get_weights()
+    
+    def save(self, path):
+        self._model.save_weights(path)
+        
+    def load(self, path):
+        self._model.load_weights(path)
+        
 
 import random
 import numpy as np
@@ -44,19 +58,27 @@ from collections import deque
 
 
 class DDQNAgent:
-    def __init__(self, gamma=0.95, num_neutron=24, num_coins_per_order=100, 
-        init_capital=1000, coin_name='ethereum', feature_list = ["current_price", "rolling_mean", "rolling_std", "higher_than_upper_band", "lower_than_lower_band"]):
+    def __init__(self, gamma=0.95, num_neutron=24, epsilon_min = 0.001, epsilon_decay=0.99, 
+                 init_capital=1000, coin_name='ethereum', num_coins_per_order=100, recent_k = 0,
+                 feature_list = ["current_price", "rolling_mean", "rolling_std", 
+                                 "cross_upper_band", "cross_lower_band"]):
         self.memory = deque(maxlen=2000)
         self.batch_size = 32
         self.gamma = gamma
         self.epsilon=1.0
-        self.epsilon_min=0.01 
-        self.epsilon_decay=0.99
-        self.env = Environment(coin_name=coin_name, features=feature_list)
-        self.portfolio = Portfolio(self.env)
+        self.epsilon_min=epsilon_min 
+        self.epsilon_decay=epsilon_decay
+        self.coin_name = coin_name
+        self.feature_list = feature_list
+        self.env = Environment(coin_name=coin_name, features=feature_list, recent_k=recent_k)
+        self.portfolio = Portfolio()
         self.model = QValue_NN(self.env.getStateSpaceSize(), self.portfolio.getActionSpaceSize(), num_neutron)
         self.target_model = QValue_NN(self.env.getStateSpaceSize(), self.portfolio.getActionSpaceSize(), num_neutron)
-        
+     
+    def plot_features(self):
+        self.env.plot(self.feature_list)
+    
+    
     def act(self, state):
         if np.random.rand() <= self.epsilon:
             return random.choice(list(Action))
@@ -95,9 +117,9 @@ class DDQNAgent:
 
             while (True):
                 action = self.act(state)
-                self.portfolio.apply_action(action)
+                self.portfolio.apply_action(state[0], action)
                 isDone, next_state = self.env.step()
-                reward = self.portfolio.getReturnsPercent()
+                reward = self.portfolio.getReturnsPercent(state[0])
                 self.remember(state, action, reward, next_state, isDone)
                 state = next_state
                 
@@ -109,23 +131,30 @@ class DDQNAgent:
                     
             if len(self.memory) > self.batch_size:
                 self.replay(self.batch_size)
+                
+        self.target_model.save('model/{}.model.h5'.format(self.coin_name))
+                
     
-    def test(self):
+    def test(self, epsilon = None):
+        if epsilon is None:
+            epsilon = self.epsilon
+        
         self.env.reset()
         self.portfolio.reset()
         state = self.env.getStates()
+        self.model.load('model/{}.model.h5'.format(self.coin_name))
 
         while (True):
             action = self.act(state)
             print action
-            self.portfolio.apply_action(action)
+            self.portfolio.apply_action(state[0], action)
             isDone, next_state = self.env.step()
-            reward = self.portfolio.getReturnsPercent()
+            reward = self.portfolio.getReturnsPercent(state[0])
             state = next_state
             if isDone:
             	break
 
-        print self.portfolio.getReturnsPercent()      
+        print self.portfolio.getReturnsPercent(state[0])      
 
 # trader = DDQNAgent()
 # trader.train(50)

@@ -11,10 +11,10 @@ import pandas as pd
 import numpy as np
 
 
-feature_list = ["current_price", "rolling_mean", "rolling_std", "higher_than_upper_band", "lower_than_lower_band"]
+feature_list = ["current_price", "rolling_mean", "rolling_std", "cross_upper_band", "cross_lower_band"]
 
 class Environment:
-    def __init__(self, coin_name="ethereum", features=feature_list):
+    def __init__(self, coin_name="ethereum", features=feature_list, recent_k = 0):
         self.coin_name = coin_name
         self.features = features
 
@@ -22,9 +22,9 @@ class Environment:
         self.series.index = self.series.sort_values(by=["Date"]).index
         self.series = self.series.sort_index()
         
-        # if recent_k > 0:
-        #     self.series = self.series[-recent_k:]
-        #     self.series.index = [i for i in range(len(self.series))]
+        if recent_k > 0:
+            self.series = self.series[-recent_k:]
+            self.series.index = [i for i in range(len(self.series))]
         
         self.length = len(self.series.index)
         self.current_index = 0
@@ -38,15 +38,43 @@ class Environment:
         self.rm = self.series["Open"].rolling(window=20, center=False, min_periods=0).mean()
         self.rstd = self.series["Open"].rolling(window=20, center=False, min_periods=0).std()
         self.upper_band, self.lower_band = self.rm + 2 * self.rstd, self.rm - 2 * self.rstd
-        self.higher_than_upper_band, self.lower_than_lower_band = (self.series["Open"] > self.upper_band) * 1, (self.series["Open"] < self.lower_band) * 1
 
         ### Mapping features to their names
         self.feature_dict = {}
         self.feature_dict["current_price"] = self.series["Open"]
         self.feature_dict["rolling_mean"] = self.rm
         self.feature_dict["rolling_std"] = self.rstd
-        self.feature_dict["higher_than_upper_band"] = self.higher_than_upper_band
-        self.feature_dict["lower_than_lower_band"] = self.lower_than_lower_band
+        self.feature_dict["cross_upper_band"] = self._crossUpperBand()
+        self.feature_dict["cross_lower_band"] = self._crossLowerBand()
+        
+        
+    def _crossUpperBand(self):
+        crossUpperBand = [0]
+        for i in range(1, len(self.series)):
+            crossUpperBand.append(self._checkCrossUpperBand(i)*1)
+        return crossUpperBand
+    
+    
+    def _crossLowerBand(self):
+        crossLowerBand = [0]
+        for i in range(1, len(self.series)):
+            crossLowerBand.append(self._checkCrossLowerBand(i)*1)
+        return crossLowerBand
+    
+        
+    def _checkCrossUpperBand(self, curr_index):
+        return (
+            curr_index - 1 >= 0
+            and self.upper_band.loc[curr_index - 1] <= self.feature_dict["current_price"][curr_index]
+            and self.upper_band.loc[curr_index] > self.feature_dict["current_price"][curr_index]
+        )
+    
+    def _checkCrossLowerBand(self, curr_index):
+        return (
+            curr_index - 1 >= 0
+            and self.lower_band.loc[curr_index - 1] >= self.feature_dict["current_price"][curr_index]
+            and self.lower_band.loc[curr_index] < self.feature_dict["current_price"][curr_index]
+        )
 
     ## This is the only place where the state should be exposed
     ''' 
