@@ -12,16 +12,16 @@ def run_random_agent(coin_name="ethereum", num_coins_per_order=100, recent_k=0):
 
 	while not is_done:
 		action = ra.act()
-		portfolio.apply_action(state[0], action)
+		portfolio.apply_action(env.getCurrentPrice(), action)
 		is_done, state = env.step()
 
-	return portfolio.getReturnsPercent(state[0])
+	return portfolio.getReturnsPercent(env.getCurrentPrice())
 
 
 def run_bollingerband_agent(coin_name="ethereum", num_coins_per_order=100, recent_k=0):
 	bba = BollingerBandAgent()
 	env = Environment(coin_name=coin_name, recent_k=recent_k, \
-		features=["current_price", "cross_upper_band", "cross_lower_band"])
+		features=["cross_upper_band", "cross_lower_band"])
 	portfolio = Portfolio(num_coins_per_order = num_coins_per_order)
 
 	is_done = False 
@@ -31,10 +31,10 @@ def run_bollingerband_agent(coin_name="ethereum", num_coins_per_order=100, recen
 		# print portfolio.getCurrentHoldings()
 		action = bba.act(state)
 		# print action
-		portfolio.apply_action(state[0], action)
+		portfolio.apply_action(env.getCurrentPrice(), action)
 		is_done, state = env.step()
 
-	return portfolio.getReturnsPercent(state[0])
+	return portfolio.getReturnsPercent(env.getCurrentPrice())
 
 
 def run_alwaysbuy_agent(coin_name="ethereum", num_coins_per_order=100, recent_k=0):
@@ -45,8 +45,8 @@ def run_alwaysbuy_agent(coin_name="ethereum", num_coins_per_order=100, recent_k=
 	state = env.getStates()
 
 	while not is_done:
-		portfolio.apply_action(state[0], Action.BUY)
+		portfolio.apply_action(env.getCurrentPrice(), Action.BUY)
 		is_done, state = env.step()
 
-	return portfolio.getReturnsPercent(state[0])
+	return portfolio.getReturnsPercent(env.getCurrentPrice())
 

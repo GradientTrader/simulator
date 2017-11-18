@@ -23,10 +23,10 @@ print bba.act([0, 1])
 class BollingerBandAgent:
 
     def act(self, state):
-    	current_price, higher_than_upper_band, lower_than_lower_band = state 
-    	if higher_than_upper_band:
+    	cross_upper_band, cross_lower_band = state 
+    	if cross_upper_band:
     		return Action.SELL
-    	if lower_than_lower_band:
+    	if cross_lower_band:
     		return Action.BUY
     	return Action.HOLD
 

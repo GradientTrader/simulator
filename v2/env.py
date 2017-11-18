@@ -96,6 +96,12 @@ class Environment:
 
     def getStateSpaceSize(self):
         return len(self.features)
+    
+    
+    ## Add method to get current price as it is commonly used
+    def getCurrentPrice(self):
+        return self.feature_dict["current_price"][self.current_index]
+    
 
     def plot(self, features_to_plot=None):
         import matplotlib.pyplot as plt

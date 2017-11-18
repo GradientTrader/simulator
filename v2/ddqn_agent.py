@@ -119,7 +119,7 @@ class DDQNAgent:
                 action = self.__act(state)
                 self.portfolio.apply_action(state[0], action)
                 isDone, next_state = self.env.step()
-                reward = self.portfolio.getReturnsPercent(state[0])
+                reward = self.portfolio.getReturnsPercent(self.env.getCurrentPrice())
                 self.__remember(state, action, reward, next_state, isDone)
                 state = next_state
                 
@@ -149,12 +149,12 @@ class DDQNAgent:
             print action
             self.portfolio.apply_action(state[0], action)
             isDone, next_state = self.env.step()
-            reward = self.portfolio.getReturnsPercent(state[0])
+            reward = self.portfolio.getReturnsPercent(self.env.getCurrentPrice())
             state = next_state
             if isDone:
             	break
 
-        print self.portfolio.getReturnsPercent(state[0])      
+        print self.portfolio.getReturnsPercent(self.env.getCurrentPrice())      
 
 # trader = DDQNAgent()
 # trader.train(50)
