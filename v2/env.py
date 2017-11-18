@@ -11,12 +11,12 @@ import pandas as pd
 import numpy as np
 
 
-feature_list = ["current_price", "rolling_mean", "rolling_std", "cross_upper_band", "cross_lower_band"]
+state_list = ["current_price", "rolling_mean", "rolling_std", "cross_upper_band", "cross_lower_band"]
 
 class Environment:
-    def __init__(self, coin_name="ethereum", features=feature_list, recent_k = 0):
+    def __init__(self, coin_name="ethereum", states=state_list, recent_k = 0):
         self.coin_name = coin_name
-        self.features = features
+        self.states = states
 
         self.series = pd.read_csv("%s/cryptocurrencypricehistory/%s_price.csv" % (os.path.dirname(os.path.abspath(__file__)), self.coin_name), parse_dates=["Date"])
         self.series.index = self.series.sort_values(by=["Date"]).index
@@ -39,13 +39,13 @@ class Environment:
         self.rstd = self.series["Open"].rolling(window=20, center=False, min_periods=0).std()
         self.upper_band, self.lower_band = self.rm + 2 * self.rstd, self.rm - 2 * self.rstd
 
-        ### Mapping features to their names
-        self.feature_dict = {}
-        self.feature_dict["current_price"] = self.series["Open"]
-        self.feature_dict["rolling_mean"] = self.rm
-        self.feature_dict["rolling_std"] = self.rstd
-        self.feature_dict["cross_upper_band"] = self.__crossUpperBand()
-        self.feature_dict["cross_lower_band"] = self.__crossLowerBand()
+        ### Mapping states to their names
+        self.state_dict = {}
+        self.state_dict["current_price"] = self.series["Open"]
+        self.state_dict["rolling_mean"] = self.rm
+        self.state_dict["rolling_std"] = self.rstd
+        self.state_dict["cross_upper_band"] = self.__crossUpperBand()
+        self.state_dict["cross_lower_band"] = self.__crossLowerBand()
         
         
     def __crossUpperBand(self):
@@ -65,15 +65,15 @@ class Environment:
     def __checkCrossUpperBand(self, curr_index):
         return (
             curr_index - 1 >= 0
-            and self.upper_band.loc[curr_index - 1] <= self.feature_dict["current_price"][curr_index]
-            and self.upper_band.loc[curr_index] > self.feature_dict["current_price"][curr_index]
+            and self.upper_band.loc[curr_index - 1] <= self.state_dict["current_price"][curr_index]
+            and self.upper_band.loc[curr_index] > self.state_dict["current_price"][curr_index]
         )
     
     def __checkCrossLowerBand(self, curr_index):
         return (
             curr_index - 1 >= 0
-            and self.lower_band.loc[curr_index - 1] >= self.feature_dict["current_price"][curr_index]
-            and self.lower_band.loc[curr_index] < self.feature_dict["current_price"][curr_index]
+            and self.lower_band.loc[curr_index - 1] >= self.state_dict["current_price"][curr_index]
+            and self.lower_band.loc[curr_index] < self.state_dict["current_price"][curr_index]
         )
 
     ## This is the only place where the state should be exposed
@@ -83,35 +83,35 @@ class Environment:
     def step(self):
         isDone = self.isDone[self.current_index]
         observation = []
-        for feature in self.features:
-            observation.append(self.feature_dict[feature][self.current_index])
+        for state in self.states:
+            observation.append(self.state_dict[state][self.current_index])
         if not isDone:
             self.current_index += 1
         return isDone, observation
 
-    def getStates(self, features=None):
-        if not features:
-            features = self.features
-        return [self.feature_dict[feature][self.current_index] for feature in features]
+    def getStates(self, states=None):
+        if not states:
+            states = self.states
+        return [self.state_dict[state][self.current_index] for state in states]
 
     def getStateSpaceSize(self):
-        return len(self.features)
+        return len(self.states)
     
     
     ## Add method to get current price as it is commonly used
     def getCurrentPrice(self):
-        return self.feature_dict["current_price"][self.current_index]
+        return self.state_dict["current_price"][self.current_index]
     
 
-    def plot(self, features_to_plot=None):
+    def plot(self, states_to_plot=None):
         import matplotlib.pyplot as plt
-        if not features_to_plot:
-            features_to_plot = self.features
+        if not states_to_plot:
+            states_to_plot = self.states
 
         plt.figure()
-        for feature in features_to_plot:
-            ax = self.feature_dict[feature].plot()
-        ax.legend(self.features)
+        for state in states_to_plot:
+            ax = self.state_dict[state].plot()
+        ax.legend(self.states)
         plt.show()
 
     def reset(self):

@@ -60,7 +60,7 @@ from collections import deque
 class DDQNAgent:
     def __init__(self, gamma=0.95, num_neutron=24, epsilon_min = 0.001, epsilon_decay=0.99, 
                  init_capital=1000, coin_name='ethereum', num_coins_per_order=100, recent_k = 0,
-                 feature_list = ["current_price", "rolling_mean", "rolling_std", 
+                 external_states = ["current_price", "rolling_mean", "rolling_std", 
                                  "cross_upper_band", "cross_lower_band"]):
         self.memory = deque(maxlen=2000)
         self.batch_size = 32
@@ -69,14 +69,14 @@ class DDQNAgent:
         self.epsilon_min=epsilon_min 
         self.epsilon_decay=epsilon_decay
         self.coin_name = coin_name
-        self.feature_list = feature_list
-        self.env = Environment(coin_name=coin_name, features=feature_list, recent_k=recent_k)
+        self.external_states = external_states
+        self.env = Environment(coin_name=coin_name, states=external_states, recent_k=recent_k)
         self.portfolio = Portfolio()
         self.model = QValue_NN(self.env.getStateSpaceSize(), self.portfolio.getActionSpaceSize(), num_neutron)
         self.target_model = QValue_NN(self.env.getStateSpaceSize(), self.portfolio.getActionSpaceSize(), num_neutron)
      
-    def plot_features(self):
-        self.env.plot(self.feature_list)
+    def plot_external_states(self):
+        self.env.plot(self.external_states)
     
     
     def __act(self, state):

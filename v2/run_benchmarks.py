@@ -21,7 +21,7 @@ def run_random_agent(coin_name="ethereum", num_coins_per_order=100, recent_k=0):
 def run_bollingerband_agent(coin_name="ethereum", num_coins_per_order=100, recent_k=0):
 	bba = BollingerBandAgent()
 	env = Environment(coin_name=coin_name, recent_k=recent_k, \
-		features=["cross_upper_band", "cross_lower_band"])
+		states=["cross_upper_band", "cross_lower_band"])
 	portfolio = Portfolio(num_coins_per_order = num_coins_per_order)
 
 	is_done = False 
