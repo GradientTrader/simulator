@@ -28,9 +28,9 @@ class Environment:
         
         self.length = len(self.series.index)
         self.current_index = 0
-        self.init()
+        self.__init()
 
-    def init(self):
+    def __init(self):
         self.isDone = np.zeros(self.series["Open"].shape, dtype=bool)
         self.isDone[-1] = True 
 
@@ -44,32 +44,32 @@ class Environment:
         self.feature_dict["current_price"] = self.series["Open"]
         self.feature_dict["rolling_mean"] = self.rm
         self.feature_dict["rolling_std"] = self.rstd
-        self.feature_dict["cross_upper_band"] = self._crossUpperBand()
-        self.feature_dict["cross_lower_band"] = self._crossLowerBand()
+        self.feature_dict["cross_upper_band"] = self.__crossUpperBand()
+        self.feature_dict["cross_lower_band"] = self.__crossLowerBand()
         
         
-    def _crossUpperBand(self):
+    def __crossUpperBand(self):
         crossUpperBand = [0]
         for i in range(1, len(self.series)):
-            crossUpperBand.append(self._checkCrossUpperBand(i)*1)
+            crossUpperBand.append(self.__checkCrossUpperBand(i)*1)
         return crossUpperBand
     
     
-    def _crossLowerBand(self):
+    def __crossLowerBand(self):
         crossLowerBand = [0]
         for i in range(1, len(self.series)):
-            crossLowerBand.append(self._checkCrossLowerBand(i)*1)
+            crossLowerBand.append(self.__checkCrossLowerBand(i)*1)
         return crossLowerBand
     
         
-    def _checkCrossUpperBand(self, curr_index):
+    def __checkCrossUpperBand(self, curr_index):
         return (
             curr_index - 1 >= 0
             and self.upper_band.loc[curr_index - 1] <= self.feature_dict["current_price"][curr_index]
             and self.upper_band.loc[curr_index] > self.feature_dict["current_price"][curr_index]
         )
     
-    def _checkCrossLowerBand(self, curr_index):
+    def __checkCrossLowerBand(self, curr_index):
         return (
             curr_index - 1 >= 0
             and self.lower_band.loc[curr_index - 1] >= self.feature_dict["current_price"][curr_index]

@@ -35,14 +35,14 @@ class Portfolio:
 
     def apply_action(self, current_price, action):
         if action == Action.BUY:
-            self._buy(current_price, self.num_coins_per_order)
+            self.__buy(current_price, self.num_coins_per_order)
         elif action == Action.SELL:
-            self._sell(current_price, self.num_coins_per_order)
+            self.__sell(current_price, self.num_coins_per_order)
 
     def getActionSpaceSize(self):
         return len(list(Action))
 
-    def _buy(self, current_price, coins_to_buy=0):
+    def __buy(self, current_price, coins_to_buy=0):
         if not current_price:
             return 0
         amount_to_buy = min(self.portfolio_cash / current_price, coins_to_buy)
@@ -50,7 +50,7 @@ class Portfolio:
         self.portfolio_cash -= amount_to_buy * current_price
         return amount_to_buy
     
-    def _sell(self, current_price, coins_to_sell=0):
+    def __sell(self, current_price, coins_to_sell=0):
         if not current_price:
             return 0
         coin_to_sell = min(coins_to_sell, self.portfolio_coin)

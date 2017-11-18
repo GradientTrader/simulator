@@ -16,19 +16,19 @@ class QValue_NN:
         self._state_size = state_size
         self._action_size = action_size
         self._units = units
-        self._model = self._build_model()
+        self._model = self.__build_model()
         
-    def _huber_loss(self, target, prediction):
+    def __huber_loss(self, target, prediction):
         # sqrt(1+error^2)-1
         error = prediction - target
         return K.mean(K.sqrt(1+K.square(error))-1, axis=-1)
 
-    def _build_model(self):
+    def __build_model(self):
         model = Sequential()
         model.add(Dense(self._units, input_dim=self._state_size, activation='relu'))
         model.add(Dense(self._units, activation='relu'))
         model.add(Dense(self._action_size, activation='linear'))
-        model.compile(loss=self._huber_loss, optimizer='adam')
+        model.compile(loss=self.__huber_loss, optimizer='adam')
         return model
 
     def train(self, state, qvalues):
@@ -79,19 +79,19 @@ class DDQNAgent:
         self.env.plot(self.feature_list)
     
     
-    def act(self, state):
+    def __act(self, state):
         if np.random.rand() <= self.epsilon:
             return random.choice(list(Action))
         act_values = self.model.predict(state)
         return Action(np.argmax(act_values[0]))
         
-    def remember(self, state, action, reward, next_state, isDone):
+    def __remember(self, state, action, reward, next_state, isDone):
         self.memory.append((state, action, reward, next_state, isDone))
         
-    def update_target_model(self):
+    def __update_target_model(self):
         self.target_model._model.set_weights(self.model._model.get_weights())
         
-    def replay(self, batch_size):
+    def __replay(self, batch_size):
         minibatch = random.sample(self.memory, self.batch_size)
         
         for state, action, reward, next_state, isDone in minibatch:
@@ -116,21 +116,21 @@ class DDQNAgent:
             state = self.env.getStates()
 
             while (True):
-                action = self.act(state)
+                action = self.__act(state)
                 self.portfolio.apply_action(state[0], action)
                 isDone, next_state = self.env.step()
                 reward = self.portfolio.getReturnsPercent(state[0])
-                self.remember(state, action, reward, next_state, isDone)
+                self.__remember(state, action, reward, next_state, isDone)
                 state = next_state
                 
                 if isDone:
-                    self.update_target_model()
+                    self.__update_target_model()
                     print("episode: {}/{}, reward: {}, epsilon: {:.2}"
                           .format(i+1, num_episodes, reward, self.epsilon))
                     break
                     
             if len(self.memory) > self.batch_size:
-                self.replay(self.batch_size)
+                self.__replay(self.batch_size)
                 
         self.target_model.save('model/{}.model.h5'.format(self.coin_name))
                 
@@ -145,7 +145,7 @@ class DDQNAgent:
         self.model.load('model/{}.model.h5'.format(self.coin_name))
 
         while (True):
-            action = self.act(state)
+            action = self.__act(state)
             print action
             self.portfolio.apply_action(state[0], action)
             isDone, next_state = self.env.step()
