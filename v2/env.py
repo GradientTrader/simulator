@@ -11,7 +11,8 @@ import pandas as pd
 import numpy as np
 
 
-state_list = ["current_price", "rolling_mean", "rolling_std", "cross_upper_band", "cross_lower_band"]
+state_list = ["current_price", "rolling_mean", "rolling_std", "cross_upper_band", "cross_lower_band", "upper_band",
+             "lower_band", "price_over_sma"]
 
 class Environment:
     def __init__(self, coin_name="ethereum", states=state_list, recent_k = 0):
@@ -46,6 +47,9 @@ class Environment:
         self.state_dict["rolling_std"] = self.rstd
         self.state_dict["cross_upper_band"] = self.__crossUpperBand()
         self.state_dict["cross_lower_band"] = self.__crossLowerBand()
+        self.state_dict["upper_band"] = self.upper_band
+        self.state_dict["lower_band"] = self.lower_band
+        self.state_dict["price_over_sma"] = self.series["Open"]/self.rm
         
         
     def __crossUpperBand(self):

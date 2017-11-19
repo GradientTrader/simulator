@@ -127,15 +127,17 @@ class DDQNAgent:
                 
                 isDone, next_state = self.env.step()
                 next_state = next_state + self.portfolio.getStates()
-                reward = self.portfolio.getReturnsPercent(self.env.getCurrentPrice())
+                reward = self.portfolio.getReward()
                 
                 self.__remember(state, action, reward, next_state, isDone)
                 state = next_state
                 
                 if isDone:
                     self.__update_target_model()
-                    print("episode: {}/{}, reward: {}, epsilon: {:.2}"
-                          .format(i+1, num_episodes, reward, self.epsilon))
+                    print("episode: {}/{}, returns: {}, epsilon: {:.2}"
+                          .format(i+1, num_episodes, 
+                                  self.portfolio.getReturnsPercent(self.env.getCurrentPrice()), 
+                                  self.epsilon))
                     break
                     
             if len(self.memory) > self.batch_size:
@@ -160,7 +162,7 @@ class DDQNAgent:
             
             isDone, next_state = self.env.step()
             next_state = next_state + self.portfolio.getStates()
-            reward = self.portfolio.getReturnsPercent(self.env.getCurrentPrice())
+            reward = self.portfolio.getReward()
             state = next_state
             
             if isDone:
