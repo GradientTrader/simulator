@@ -84,5 +84,5 @@ class Portfolio:
         return coin_to_sell
 
     def reset(self):
-    	self.__init__(portfolio_cash=self.starting_cash)
+    	self.__init__(portfolio_cash=self.starting_cash, num_coins_per_order=self.num_coins_per_order, states=self.states)
 
