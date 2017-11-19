@@ -99,7 +99,7 @@ class Portfolio:
             return 0
         
         if self.num_coins_per_order == 0:
-            coin_to_sell = self.num_coins_per_order
+            coin_to_sell = self.portfolio_coin
         else:
             coin_to_sell = min(self.num_coins_per_order, self.portfolio_coin)
         
