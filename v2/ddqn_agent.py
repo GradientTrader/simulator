@@ -80,6 +80,8 @@ class DDQNAgent:
         _state_size = self.env.getStateSpaceSize() + self.portfolio.getStateSpaceSize()
         self.model = QValue_NN(_state_size, self.portfolio.getActionSpaceSize(), num_neutron)
         self.target_model = QValue_NN(_state_size, self.portfolio.getActionSpaceSize(), num_neutron)
+        
+        self.cum_returns = []
      
     def plot_external_states(self):
         self.env.plot(self.external_states)
@@ -115,6 +117,8 @@ class DDQNAgent:
             self.epsilon *= self.epsilon_decay
     
     def train(self, num_episodes=100):
+        self.cum_returns = []
+        
         for i in range(num_episodes):
             
             self.env.reset()
@@ -134,9 +138,13 @@ class DDQNAgent:
                 
                 if isDone:
                     self.__update_target_model()
+                    
+                    cum_return = self.portfolio.getReturnsPercent(self.env.getCurrentPrice())
+                    self.cum_returns.append(cum_return)
+                    
                     print("episode: {}/{}, returns: {}, epsilon: {:.2}"
                           .format(i+1, num_episodes, 
-                                  self.portfolio.getReturnsPercent(self.env.getCurrentPrice()), 
+                                  cum_return, 
                                   self.epsilon))
                     break
                     
@@ -168,7 +176,16 @@ class DDQNAgent:
             if isDone:
             	break
 
-        print self.portfolio.getReturnsPercent(self.env.getCurrentPrice())      
+        print self.portfolio.getReturnsPercent(self.env.getCurrentPrice())
+        
+   
+    def plot_cum_returns(self):
+        import matplotlib.pyplot as plt
+        
+        plt.figure(figsize=(10,6))
+        x = [i for i in range(len(self.cum_returns))]
+        plt.plot(x, self.cum_returns)
+        plt.show()
 
 # trader = DDQNAgent()
 # trader.train(50)
