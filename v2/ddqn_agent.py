@@ -98,6 +98,20 @@ class DDQNAgent:
         
     def __update_target_model(self):
         self.target_model._model.set_weights(self.model._model.get_weights())
+
+    def print_my_memory(self):
+        mem = list(self.memory)
+        mem_str = []
+        for s, a, r, s_, donzo in mem:
+            mem_str += ["%s_%s_%s_%s_%s" % (str(s), str(a), str(r), str(s_), str(donzo))]
+    
+        uniques = list(set(mem_str))
+        uniques.sort() 
+        
+        for elem in uniques:
+            print elem
+            print mem_str.count(elem)
+            print "\n"
         
     def __replay(self, batch_size):
         minibatch = random.sample(self.memory, self.batch_size)
