@@ -1,7 +1,24 @@
+
+'''
+
+### Cryptocurrency Trader Agent
+### UCB MIDS 2017 Winter Capstone Project
+### Ramsey Aweti, Shuang Chan, GuangZhi(Frank) Xie, Jason Xie
+
+### Class: 
+###        DDQNAgent
+### Purpose: 
+###        Deep Q Learning Implementation
+### Sample Usage:
+
+# trader = DDQNAgent()
+# trader.train(50)
+# trader.test()
+
+'''
+
 from env import *
 from portfolio import *
-
-### 
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -9,8 +26,7 @@ from keras.optimizers import Adam
 from keras import backend as K
 from keras.models import load_model
 
-
-
+# Neural Network for the Q value approximation
 class QValue_NN:
     def __init__(self, state_size, action_size, units):
         self._state_size = state_size
@@ -56,8 +72,11 @@ import random
 import numpy as np
 from collections import deque
 
+# Agent Implementation
 
 class DDQNAgent:
+    
+    # initialize internal variables
     def __init__(self, gamma=0.95, num_neutron=24, epsilon_min = 0.001, epsilon_decay=0.99, 
                  init_capital=1000, coin_name='ethereum', num_coins_per_order=100, recent_k = 0,
                  external_states = ["current_price", "rolling_mean", "rolling_std", 
@@ -123,13 +142,18 @@ class DDQNAgent:
             else:
                 a = self.model.predict(next_state)[0]
                 t = self.target_model.predict(next_state)[0]
+                
+                # Bellman Equation
+                # -0.60 + gamma * -0.50
                 target[0][action.value] = reward + self.gamma * t[np.argmax(a)]
-                ## -0.60 + gamma * -0.50
+
             self.model.train(state, target)
         
+        # update the epsilon to gradually reduce the random exploration
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
-    
+
+    # Agent Training
     def train(self, num_episodes=100):
         self.cum_returns = []
         
@@ -139,6 +163,10 @@ class DDQNAgent:
             self.portfolio.reset()
             state = self.env.getStates() + self.portfolio.getStates()
 
+            # walk through the environment
+            # obtain action based on state values using the Neural Network model
+            # collect reward
+            # update the experience in Memory
             while (True):
                 action = self.__act(state)
                 self.portfolio.apply_action(self.env.getCurrentPrice(), action)
@@ -161,7 +189,8 @@ class DDQNAgent:
                                   cum_return, 
                                   self.epsilon))
                     break
-                    
+             
+            # train the Neural Network incrementally with the new experiences
             if len(self.memory) > self.batch_size:
                 self.__replay(self.batch_size)
                 
@@ -200,7 +229,3 @@ class DDQNAgent:
         x = [i for i in range(len(self.cum_returns))]
         plt.plot(x, self.cum_returns)
         plt.show()
-
-# trader = DDQNAgent()
-# trader.train(50)
-# trader.test()

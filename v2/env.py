@@ -1,9 +1,22 @@
 '''
+
+### Cryptocurrency Trader Agent
+### UCB MIDS 2017 Winter Capstone Project
+### Ramsey Aweti, Shuang Chan, GuangZhi(Frank) Xie, Jason Xie
+
+### Class: 
+###        Environment
+### Purpose: 
+###        This is utility class used to simulate the cryptocurrency markets.
+###        It maintains the state list of the environment.
+### Sample Usage:
+
 env = Environment(coin_name="ethereum")
 print env.step()
 print env.step()
 print env.step()
 env.plot()
+
 '''
 
 import os
@@ -15,11 +28,17 @@ state_list = ["current_price", "rolling_mean", "rolling_std", "cross_upper_band"
              "lower_band", "price_over_sma"]
 
 class Environment:
+    
+    # load pricing data
+    # initialize the environment variables
     def __init__(self, coin_name="ethereum", states=state_list, recent_k = 0):
         self.coin_name = coin_name
         self.states = states
 
-        self.series = pd.read_csv("%s/cryptocurrencypricehistory/%s_price.csv" % (os.path.dirname(os.path.abspath(__file__)), self.coin_name), parse_dates=["Date"])
+        self.series = pd.read_csv("%s/cryptocurrencypricehistory/%s_price.csv" 
+                                  % (os.path.dirname(os.path.abspath(__file__)), self.coin_name), 
+                                  parse_dates=["Date"])
+        
         self.series.index = self.series.sort_values(by=["Date"]).index
         self.series = self.series.sort_index()
         
@@ -31,6 +50,7 @@ class Environment:
         self.current_index = 0
         self.__init()
 
+    # deriving the features used for the state definition
     def __init(self):
         self.isDone = np.zeros(self.series["Open"].shape, dtype=bool)
         self.isDone[-1] = True 
@@ -84,6 +104,7 @@ class Environment:
     ''' 
     isDone, state = env.step()
     '''
+    # simulate a forward step in the environment, i.e.: moving one day
     def step(self):
         isDone = self.isDone[self.current_index]
         observation = []
