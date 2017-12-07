@@ -34,6 +34,7 @@ class Action(Enum):
 
 # internal state
 state_list = ["coin", "cash", "total_value", "is_holding_coin", "return_since_entry"]
+spread = 0.01 # 1 bps
 
 class Portfolio:
     
@@ -59,18 +60,22 @@ class Portfolio:
         if not current_price:
             return 0
         
+        buy_price = current_price * (1 + spread)
+        
         if self.num_coins_per_order == 0:
-            amount_to_buy = self.portfolio_cash / current_price
+            amount_to_buy = self.portfolio_cash / buy_price
         else:
-            amount_to_buy = min(self.portfolio_cash / current_price, self.num_coins_per_order)
+            amount_to_buy = min(self.portfolio_cash / buy_price, self.num_coins_per_order)
             
         self.portfolio_coin += amount_to_buy
-        self.portfolio_cash -= amount_to_buy * current_price
+        self.portfolio_cash -= amount_to_buy * buy_price
         return amount_to_buy
     
     def __sell(self, current_price):
         if not current_price:
             return 0
+        
+        sell_price = current_price * (1 - spread)
         
         if self.num_coins_per_order == 0:
             coin_to_sell = self.portfolio_coin
@@ -78,7 +83,7 @@ class Portfolio:
             coin_to_sell = min(self.num_coins_per_order, self.portfolio_coin)
         
         self.portfolio_coin -= coin_to_sell
-        self.portfolio_cash += coin_to_sell * current_price
+        self.portfolio_cash += coin_to_sell * sell_price
         return coin_to_sell
     
     # reset portfolio
@@ -116,7 +121,8 @@ class Portfolio:
         
 
     def getCurrentValue(self, current_price):
-        return self.portfolio_coin * current_price + self.portfolio_cash
+        sell_price = current_price * (1 - spread)
+        return self.portfolio_coin * sell_price + self.portfolio_cash
 
     def getReturnsPercent(self, current_price):
         return 100 * (self.getCurrentValue(current_price) - self.starting_cash) / self.starting_cash
