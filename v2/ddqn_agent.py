@@ -24,6 +24,7 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
 from keras import backend as K
+from keras import initializers
 from keras.models import load_model
 
 # Neural Network for the Q value approximation
@@ -41,9 +42,15 @@ class QValue_NN:
 
     def __build_model(self):
         model = Sequential()
-        model.add(Dense(self._units, input_dim=self._state_size, activation='relu'))
-        model.add(Dense(self._units, activation='relu'))
-        model.add(Dense(self._action_size, activation='linear'))
+        model.add(Dense(self._units, input_dim=self._state_size, activation='relu',
+                       kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
+                       bias_initializer='zeros'))
+        model.add(Dense(self._units, activation='relu',
+                       kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
+                       bias_initializer='zeros'))
+        model.add(Dense(self._action_size, activation='linear',
+                       kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
+                       bias_initializer='zeros'))
         model.compile(loss=self.__huber_loss, optimizer='adam')
         return model
 
@@ -81,7 +88,7 @@ class DDQNAgent:
                  init_capital=1000, coin_name='ethereum', num_coins_per_order=100, recent_k = 0,
                  external_states = ["current_price", "rolling_mean", "rolling_std", 
                                  "cross_upper_band", "cross_lower_band"],
-                 internal_states = ["coin", "cash", "total_value"]):
+                 internal_states = ["coin", "cash", "total_value"], verbose=False):
         self.memory = deque(maxlen=2000)
         self.batch_size = 32
         self.gamma = gamma
@@ -94,7 +101,8 @@ class DDQNAgent:
         self.env = Environment(coin_name=coin_name, states=external_states, recent_k=recent_k)
         # Internal states
         self.internal_states = internal_states
-        self.portfolio = Portfolio(portfolio_cash=init_capital, num_coins_per_order=num_coins_per_order, states=internal_states)
+        self.portfolio = Portfolio(portfolio_cash=init_capital, num_coins_per_order=num_coins_per_order, 
+                                   states=internal_states, verbose=verbose)
         # NN model
         _state_size = self.env.getStateSpaceSize() + self.portfolio.getStateSpaceSize()
         self.model = QValue_NN(_state_size, self.portfolio.getActionSpaceSize(), num_neutron)
@@ -209,7 +217,7 @@ class DDQNAgent:
         while (True):
             action = self.__act(state)
             print action
-            self.portfolio.apply_action(state[0], action)
+            self.portfolio.apply_action(self.env.getCurrentPrice(), action)
             
             isDone, next_state = self.env.step()
             next_state = next_state + self.portfolio.getStates()
