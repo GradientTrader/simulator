@@ -206,8 +206,8 @@ class DDQNAgent:
                 
     
     def test(self, epsilon = None):
-        if epsilon is None:
-            epsilon = self.epsilon
+        if epsilon is not None:
+            self.epsilon = epsilon
         
         self.env.reset()
         self.portfolio.reset()
@@ -221,7 +221,6 @@ class DDQNAgent:
             
             isDone, next_state = self.env.step()
             next_state = next_state + self.portfolio.getStates()
-            reward = self.portfolio.getReward()
             state = next_state
             
             if isDone:
