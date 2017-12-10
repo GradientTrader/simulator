@@ -127,6 +127,9 @@ class Environment:
     def getCurrentPrice(self):
         return self.state_dict["current_price"][self.current_index]
     
+    def getFinalPrice(self):
+        return self.state_dict["current_price"][self.length-1]
+    
 
     def plot(self, states_to_plot=None):
         import matplotlib.pyplot as plt
@@ -136,7 +139,7 @@ class Environment:
         plt.figure()
         for state in states_to_plot:
             ax = self.state_dict[state].plot()
-        ax.legend(self.states)
+        ax.legend(states_to_plot)
         plt.show()
 
     def reset(self):

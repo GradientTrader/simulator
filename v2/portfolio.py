@@ -46,8 +46,9 @@ def _round_down(v):
 class Portfolio:
     
     # initialize the portfolio variables
-    def __init__(self, portfolio_cash=1000.0, num_coins_per_order=10.0, states=state_list, verbose=False):
+    def __init__(self, portfolio_cash=1000.0, num_coins_per_order=10.0, states=state_list, verbose=False, final_price=0.0):
         self.verbose = verbose
+        self.final_price = final_price
         self.starting_cash = portfolio_cash
         self.portfolio_coin = 0.0
         self.portfolio_cash = portfolio_cash
@@ -62,7 +63,7 @@ class Portfolio:
         self.state_dict["is_holding_coin"] = 0
         self.state_dict["return_since_entry"] = 0
         
-        self.daily_return_percentage = 0
+        self.bought_price = 0.0
 
     def __buy(self, current_price):
         if not current_price:
@@ -84,7 +85,7 @@ class Portfolio:
         if self.verbose:
             print "coin to buy", coin_to_buy, "coin now", self.portfolio_coin, "cash now", self.portfolio_cash
         
-        return coin_to_buy
+        return coin_to_buy, buy_price
     
     def __sell(self, current_price):
         if not current_price:
@@ -106,7 +107,7 @@ class Portfolio:
         if self.verbose:
             print "coin to sell", coin_to_sell, "coin now", self.portfolio_coin, "cash now", self.portfolio_cash
         
-        return coin_to_sell
+        return coin_to_sell, sell_price
     
     # reset portfolio
     def reset(self):
@@ -120,24 +121,31 @@ class Portfolio:
         return [self.state_dict[state] for state in states]
     
     # reward defintion
-    # Is Daily Return a good reward function?
     def getReward(self):
-        return self.daily_return_percentage
+        return self.reward
 
     # apply action (buy, sell or hold) to the portfolio
     # update the internal state after the action
     def apply_action(self, current_price, action):
+        self.reward = self.getCurrentValue(current_price) - self.state_dict["total_value"] # Reward for HOLD
         self.state_dict["total_value"] = self.getCurrentValue(current_price)
         if self.verbose:
             print "Action start", action, "Total value before action", self.state_dict["total_value"]           
         
         if action == Action.BUY:
-            self.__buy(current_price)
+            coin_to_buy, buy_price = self.__buy(current_price)
+            if coin_to_buy > 0:
+                self.bought_price = buy_price
+                self.reward = -spread * current_price * coin_to_buy # Reward for BUY
+            else:
+                action = Action.HOLD
+                
         elif action == Action.SELL:
-            self.__sell(current_price)
-        
-        # Update daily return
-        self.daily_return_percentage = (self.getCurrentValue(current_price) * 100.0 / self.state_dict["total_value"]) - 100
+            coin_to_sell, sell_price = self.__sell(current_price)
+            if coin_to_sell > 0:
+                self.reward = (sell_price - self.bought_price) * coin_to_sell # Reward for SELL
+            else:
+                action = Action.HOLD
         
         # Update states
         self.state_dict["coin"] = self.portfolio_coin
@@ -148,6 +156,8 @@ class Portfolio:
         
         if self.verbose:
             print "Action end:", action, "Reward:", self.getReward()
+            
+        return action
         
 
     def getCurrentValue(self, current_price):

@@ -42,16 +42,19 @@ class QValue_NN:
 
     def __build_model(self):
         model = Sequential()
-        model.add(Dense(self._units, input_dim=self._state_size, activation='relu',
+        model.add(Dense(64, input_dim=self._state_size, activation='relu',
                        kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
                        bias_initializer='zeros'))
-        model.add(Dense(self._units, activation='relu',
+        model.add(Dense(32, activation='relu',
+                       kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
+                       bias_initializer='zeros'))
+        model.add(Dense(8, activation='relu',
                        kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
                        bias_initializer='zeros'))
         model.add(Dense(self._action_size, activation='linear',
                        kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
                        bias_initializer='zeros'))
-        model.compile(loss=self.__huber_loss, optimizer='adam')
+        model.compile(loss="mse", optimizer=Adam(lr=0.001))
         return model
 
     def train(self, state, qvalues):
@@ -84,7 +87,7 @@ from collections import deque
 class DDQNAgent:
     
     # initialize internal variables
-    def __init__(self, gamma=0.95, num_neutron=24, epsilon_min = 0.001, epsilon_decay=0.99, 
+    def __init__(self, gamma=0.95, num_neutron=24, epsilon_min = 0.001, epsilon_decay=0.995, 
                  init_capital=1000, coin_name='ethereum', num_coins_per_order=100, recent_k = 0,
                  external_states = ["current_price", "rolling_mean", "rolling_std", 
                                  "cross_upper_band", "cross_lower_band"],
@@ -102,7 +105,7 @@ class DDQNAgent:
         # Internal states
         self.internal_states = internal_states
         self.portfolio = Portfolio(portfolio_cash=init_capital, num_coins_per_order=num_coins_per_order, 
-                                   states=internal_states, verbose=verbose)
+                                   states=internal_states, verbose=verbose, final_price=self.env.getFinalPrice())
         # NN model
         _state_size = self.env.getStateSpaceSize() + self.portfolio.getStateSpaceSize()
         self.model = QValue_NN(_state_size, self.portfolio.getActionSpaceSize(), num_neutron)
@@ -177,7 +180,7 @@ class DDQNAgent:
             # update the experience in Memory
             while (True):
                 action = self.__act(state)
-                self.portfolio.apply_action(self.env.getCurrentPrice(), action)
+                action = self.portfolio.apply_action(self.env.getCurrentPrice(), action)
                 
                 isDone, next_state = self.env.step()
                 next_state = next_state + self.portfolio.getStates()
@@ -216,8 +219,8 @@ class DDQNAgent:
 
         while (True):
             action = self.__act(state)
+            action = self.portfolio.apply_action(self.env.getCurrentPrice(), action)
             print action
-            self.portfolio.apply_action(self.env.getCurrentPrice(), action)
             
             isDone, next_state = self.env.step()
             next_state = next_state + self.portfolio.getStates()
@@ -236,3 +239,6 @@ class DDQNAgent:
         x = [i for i in range(len(self.cum_returns))]
         plt.plot(x, self.cum_returns)
         plt.show()
+        
+    def plot_env(self, states_to_plot=None):
+        self.env.plot(states_to_plot)
