@@ -42,19 +42,16 @@ class QValue_NN:
 
     def __build_model(self):
         model = Sequential()
-        model.add(Dense(64, input_dim=self._state_size, activation='relu',
+        model.add(Dense(self._units, input_dim=self._state_size, activation='relu',
                        kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
                        bias_initializer='zeros'))
-        model.add(Dense(32, activation='relu',
-                       kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
-                       bias_initializer='zeros'))
-        model.add(Dense(8, activation='relu',
+        model.add(Dense(self._units, activation='relu',
                        kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
                        bias_initializer='zeros'))
         model.add(Dense(self._action_size, activation='linear',
                        kernel_initializer=initializers.RandomNormal(stddev=0.001, seed=3456),
                        bias_initializer='zeros'))
-        model.compile(loss="mse", optimizer=Adam(lr=0.001))
+        model.compile(loss=self.__huber_loss, optimizer="adam")
         return model
 
     def train(self, state, qvalues):
@@ -184,7 +181,8 @@ class DDQNAgent:
                 
                 isDone, next_state = self.env.step()
                 next_state = next_state + self.portfolio.getStates()
-                reward = self.portfolio.getReward()
+                #reward = self.portfolio.getReward()
+                reward = self.env.getReward(action)
                 
                 self.__remember(state, action, reward, next_state, isDone)
                 state = next_state

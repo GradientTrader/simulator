@@ -22,6 +22,7 @@ env.plot()
 import os
 import pandas as pd 
 import numpy as np
+from utils import *
 
 
 state_list = ["current_price", "rolling_mean", "rolling_std", "cross_upper_band", "cross_lower_band", "upper_band",
@@ -130,6 +131,13 @@ class Environment:
     def getFinalPrice(self):
         return self.state_dict["current_price"][self.length-1]
     
+    def getPriceAt(self, index):
+        if index < 0:
+            return self.state_dict["current_price"][0]
+        if index >= self.length:
+            return self.getFinalPrice()
+        return self.state_dict["current_price"][index]
+    
 
     def plot(self, states_to_plot=None):
         import matplotlib.pyplot as plt
@@ -144,4 +152,20 @@ class Environment:
 
     def reset(self):
         self.current_index = 0
+        
+    def getReward(self, action):
+        a = 0
+        if action == Action.BUY:
+            a = 1
+        elif action == Action.SELL:
+            a = -1
+            
+        price_t = self.getCurrentPrice()
+        price_t_minus_1 = self.getPriceAt(self.current_index - 1)
+        price_t_minus_n = self.getPriceAt(self.current_index - 10)
+        
+        r = (1 + a*(price_t - price_t_minus_1)/price_t_minus_1)*price_t_minus_1/price_t_minus_n
+        return r
+        
+        
 

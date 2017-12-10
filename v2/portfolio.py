@@ -23,15 +23,9 @@ print p.getCurrentHoldings()
 
 '''
 
-import math
 import numpy as np
-from enum import Enum
+from utils import *
 
-# action list
-class Action(Enum):
-    HOLD=0
-    BUY=1
-    SELL=2
 
 # internal state
 state_list = ["coin", "cash", "total_value", "is_holding_coin", "return_since_entry"]
@@ -112,7 +106,7 @@ class Portfolio:
     # reset portfolio
     def reset(self):
         self.__init__(portfolio_cash=self.starting_cash, num_coins_per_order=self.num_coins_per_order, 
-                      states=self.states, verbose=self.verbose)
+                      states=self.states, verbose=self.verbose, final_price=self.final_price)
         
     # return internal state    
     def getStates(self, states=None):
@@ -122,7 +116,8 @@ class Portfolio:
     
     # reward defintion
     def getReward(self):
-        return self.reward
+        #return self.reward
+        return self.getCurrentValue(self.final_price) - self.starting_cash
 
     # apply action (buy, sell or hold) to the portfolio
     # update the internal state after the action
