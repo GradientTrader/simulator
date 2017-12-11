@@ -40,12 +40,11 @@ def _round_down(v):
 class Portfolio:
     
     # initialize the portfolio variables
-    def __init__(self, portfolio_cash=1000.0, num_coins_per_order=10.0, states=state_list, verbose=False, final_price=0.0):
+    def __init__(self, num_coins_per_order=10.0, states=state_list, verbose=False, final_price=0.0):
         self.verbose = verbose
         self.final_price = final_price
-        self.starting_cash = portfolio_cash
         self.portfolio_coin = 0.0
-        self.portfolio_cash = portfolio_cash
+        self.portfolio_cash = 0.0
         self.num_coins_per_order = num_coins_per_order
         self.states = states
         
@@ -58,6 +57,8 @@ class Portfolio:
         self.state_dict["return_since_entry"] = 0
         
         self.bought_price = 0.0
+        
+        self.cash_used = 0.0
 
     def __buy(self, current_price):
         if not current_price:
@@ -65,19 +66,18 @@ class Portfolio:
         
         buy_price = current_price * (1 + spread)
         
-        if self.num_coins_per_order == 0:
-            coin_to_buy = _round_down(self.portfolio_cash / buy_price)
-        else:
-            coin_to_buy = min(_round_down(self.portfolio_cash / buy_price), self.num_coins_per_order)
+        coin_to_buy = self.num_coins_per_order
         
         if self.verbose:
-            print "original coin", self.portfolio_coin, "original cash", self.portfolio_cash, "price", buy_price   
+            print "original coin:{}, original cash:{}, price:{}, original cash used:{}".format(
+                self.portfolio_coin, self.portfolio_cash, buy_price, self.cash_used)
             
         self.portfolio_coin += coin_to_buy
-        self.portfolio_cash -= coin_to_buy * buy_price
+        self.cash_used += coin_to_buy * buy_price
         
         if self.verbose:
-            print "coin to buy", coin_to_buy, "coin now", self.portfolio_coin, "cash now", self.portfolio_cash
+            print "coin to buy:{}, coin now:{}, cash now:{}, cash used now:{}".format(
+                coin_to_buy, self.portfolio_coin, self.portfolio_cash, self.cash_used)
         
         return coin_to_buy, buy_price
     
@@ -87,25 +87,24 @@ class Portfolio:
         
         sell_price = current_price * (1 - spread)
         
-        if self.num_coins_per_order == 0:
-            coin_to_sell = self.portfolio_coin
-        else:
-            coin_to_sell = min(self.num_coins_per_order, self.portfolio_coin)
+        coin_to_sell = min(self.num_coins_per_order, self.portfolio_coin)
         
         if self.verbose:
-            print "original coin", self.portfolio_coin, "original cash", self.portfolio_cash, "price", sell_price
+            print "original coin:{}, original cash:{}, price:{}, original cash used:{}".format(
+                self.portfolio_coin, self.portfolio_cash, buy_price, self.cash_used)
         
         self.portfolio_coin -= coin_to_sell
         self.portfolio_cash += coin_to_sell * sell_price
         
         if self.verbose:
-            print "coin to sell", coin_to_sell, "coin now", self.portfolio_coin, "cash now", self.portfolio_cash
+            print "coin to buy:{}, coin now:{}, cash now:{}, cash used now:{}".format(
+                coin_to_buy, self.portfolio_coin, self.portfolio_cash, self.cash_used) 
         
         return coin_to_sell, sell_price
     
     # reset portfolio
     def reset(self):
-        self.__init__(portfolio_cash=self.starting_cash, num_coins_per_order=self.num_coins_per_order, 
+        self.__init__(num_coins_per_order=self.num_coins_per_order, 
                       states=self.states, verbose=self.verbose, final_price=self.final_price)
         
     # return internal state    
@@ -117,28 +116,31 @@ class Portfolio:
     # reward defintion
     def getReward(self):
         #return self.reward
-        return self.getCurrentValue(self.final_price) - self.starting_cash
+        if self.cash_used == 0.0:
+            return 0.0
+        return (self.getCurrentValue(self.final_price) - self.cash_used)/self.cash_used
 
     # apply action (buy, sell or hold) to the portfolio
     # update the internal state after the action
     def apply_action(self, current_price, action):
-        self.reward = self.getCurrentValue(current_price) - self.state_dict["total_value"] # Reward for HOLD
         self.state_dict["total_value"] = self.getCurrentValue(current_price)
         if self.verbose:
             print "Action start", action, "Total value before action", self.state_dict["total_value"]           
         
+        self.reward = self.getCurrentValue(self.final_price) - self.state_dict["total_value"] # Reward for HOLD
         if action == Action.BUY:
             coin_to_buy, buy_price = self.__buy(current_price)
             if coin_to_buy > 0:
                 self.bought_price = buy_price
-                self.reward = -spread * current_price * coin_to_buy # Reward for BUY
+                self.reward = self.getCurrentValue(self.final_price)-self.state_dict["total_value"]-spread * current_price * coin_to_buy - self.cash_used # Reward for BUY
             else:
                 action = Action.HOLD
                 
         elif action == Action.SELL:
             coin_to_sell, sell_price = self.__sell(current_price)
             if coin_to_sell > 0:
-                self.reward = (sell_price - self.bought_price) * coin_to_sell # Reward for SELL
+                #self.reward = (sell_price - self.bought_price) * coin_to_sell # Reward for SELL
+                self.reward = self.state_dict["total_value"] - self.cash_used
             else:
                 action = Action.HOLD
         
@@ -160,7 +162,10 @@ class Portfolio:
         return self.portfolio_coin * sell_price + self.portfolio_cash
 
     def getReturnsPercent(self, current_price):
-        return 100 * (self.getCurrentValue(current_price) - self.starting_cash) / self.starting_cash
+        #return 100 * (self.getCurrentValue(current_price) - self.starting_cash) / self.starting_cash
+        if self.cash_used == 0.0:
+            return 0.0
+        return 100 * (self.getCurrentValue(current_price) - self.cash_used) / self.cash_used
 
     def getCurrentHoldings(self, current_price):
         return "%.2f coins, %.2f cash, %.2f current value, %.2f percent returns" \
@@ -172,6 +177,9 @@ class Portfolio:
     
     def getStateSpaceSize(self):
         return len(self.states)
+    
+    def getCashUsed(self):
+        return self.cash_used
 
 
 
